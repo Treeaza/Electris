@@ -321,7 +321,7 @@
   )
 
   (module Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder (layer F.Cu) (tedit 5F68FEEF) (tstamp 6093B1CA)
-    (at 109.75 64 90)
+    (at 117.5 50.25 90)
     (descr "Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "capacitor handsolder")
     (path /6095E45F)
@@ -429,7 +429,7 @@
   )
 
   (module Capacitor_THT:CP_Radial_D5.0mm_P2.50mm (layer F.Cu) (tedit 5AE50EF0) (tstamp 6093B270)
-    (at 97.75 66.75 90)
+    (at 105.5 53 90)
     (descr "CP, Radial series, Radial, pin pitch=2.50mm, , diameter=5mm, Electrolytic Capacitor")
     (tags "CP Radial series Radial pin pitch 2.50mm  diameter 5mm Electrolytic Capacitor")
     (path /60951253)
@@ -579,7 +579,7 @@
   )
 
   (module Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder (layer F.Cu) (tedit 5F68FEEF) (tstamp 6093B281)
-    (at 94.5 70.5 180)
+    (at 102.25 56.75 180)
     (descr "Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "capacitor handsolder")
     (path /60954434)
@@ -687,7 +687,7 @@
   )
 
   (module Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder (layer F.Cu) (tedit 5F68FEEF) (tstamp 6093B2B4)
-    (at 94.5 75 180)
+    (at 102.25 61.25 180)
     (descr "Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "capacitor handsolder")
     (path /60966D52)
@@ -795,7 +795,7 @@
   )
 
   (module Diode_SMD:D_SOD-323_HandSoldering (layer F.Cu) (tedit 58641869) (tstamp 6093B2EE)
-    (at 104.5 65 180)
+    (at 112.25 51.25 180)
     (descr SOD-323)
     (tags SOD-323)
     (path /609480BB)
@@ -838,7 +838,7 @@
   )
 
   (module Fuse:Fuse_0603_1608Metric_Pad1.05x0.95mm_HandSolder (layer F.Cu) (tedit 5F68FEF1) (tstamp 6093B2FF)
-    (at 107.75 64 90)
+    (at 115.5 50.25 90)
     (descr "Fuse SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf), generated with kicad-footprint-generator")
     (tags "fuse handsolder")
     (path /60B572A0)
@@ -874,7 +874,7 @@
   )
 
   (module Inductor_SMD:L_0603_1608Metric_Pad1.05x0.95mm_HandSolder (layer F.Cu) (tedit 5F68FEF0) (tstamp 6093B310)
-    (at 98.5 74.25 90)
+    (at 106.25 60.5 90)
     (descr "Inductor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf), generated with kicad-footprint-generator")
     (tags "inductor handsolder")
     (path /60966D48)
@@ -910,7 +910,7 @@
   )
 
   (module Connector_BarrelJack:BarrelJack_Horizontal (layer F.Cu) (tedit 5A1DBF6A) (tstamp 6093B333)
-    (at 107.75 58.75 270)
+    (at 115.5 45 270)
     (descr "DC Barrel Jack")
     (tags "Power Jack")
     (path /60B4A194)
@@ -1063,7 +1063,7 @@
   )
 
   (module jlib:Connector_Amphenol_ICD15S13E4GX00LF (layer F.Cu) (tedit 609327D4) (tstamp 6093B385)
-    (at 147.9 65.1 180)
+    (at 147.15 51.35 180)
     (path /609AE3A3)
     (fp_text reference J4 (at 5 -2.25) (layer F.SilkS)
       (effects (font (size 1 1) (thickness 0.15)))
@@ -1199,7 +1199,7 @@
   )
 
   (module Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm (layer F.Cu) (tedit 5B391E66) (tstamp 6093B3BB)
-    (at 136.25 72.25 90)
+    (at 135.5 58.5 90)
     (descr "SMD Solder Jumper, 1x1.5mm, rounded Pads, 0.3mm gap, open")
     (tags "solder jumper open")
     (path /609AE36C)
@@ -1243,7 +1243,7 @@
   )
 
   (module Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm (layer F.Cu) (tedit 5B391E66) (tstamp 6093B3CD)
-    (at 138.75 72.25 90)
+    (at 138 58.5 90)
     (descr "SMD Solder Jumper, 1x1.5mm, rounded Pads, 0.3mm gap, open")
     (tags "solder jumper open")
     (path /609AE372)
@@ -1287,7 +1287,7 @@
   )
 
   (module Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm (layer F.Cu) (tedit 5B391E66) (tstamp 6093B3DF)
-    (at 141.25 72.25 90)
+    (at 140.5 58.5 90)
     (descr "SMD Solder Jumper, 1x1.5mm, rounded Pads, 0.3mm gap, open")
     (tags "solder jumper open")
     (path /609AE38A)
@@ -1331,7 +1331,7 @@
   )
 
   (module Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm (layer F.Cu) (tedit 5B391E66) (tstamp 6093B3F1)
-    (at 143.75 72.25 90)
+    (at 143 58.5 90)
     (descr "SMD Solder Jumper, 1x1.5mm, rounded Pads, 0.3mm gap, open")
     (tags "solder jumper open")
     (path /609AE384)
@@ -1375,7 +1375,7 @@
   )
 
   (module Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm (layer F.Cu) (tedit 5B391E66) (tstamp 6093B403)
-    (at 146.25 72.25 90)
+    (at 145.5 58.5 90)
     (descr "SMD Solder Jumper, 1x1.5mm, rounded Pads, 0.3mm gap, open")
     (tags "solder jumper open")
     (path /609AE37E)
@@ -1419,7 +1419,7 @@
   )
 
   (module Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm (layer F.Cu) (tedit 5B391E66) (tstamp 6093B415)
-    (at 148.75 72.25 90)
+    (at 148 58.5 90)
     (descr "SMD Solder Jumper, 1x1.5mm, rounded Pads, 0.3mm gap, open")
     (tags "solder jumper open")
     (path /609AE378)
@@ -1515,7 +1515,7 @@
   )
 
   (module Inductor_SMD:L_1210_3225Metric_Pad1.42x2.65mm_HandSolder (layer F.Cu) (tedit 5F68FEF0) (tstamp 6093B43B)
-    (at 100 70.5 180)
+    (at 107.75 56.75 180)
     (descr "Inductor SMD 1210 (3225 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf), generated with kicad-footprint-generator")
     (tags "inductor handsolder")
     (path /6092C0DA)
@@ -1988,7 +1988,7 @@
   )
 
   (module Package_SO:SOP-8_3.9x4.9mm_P1.27mm (layer F.Cu) (tedit 5D9F72B1) (tstamp 6093B63F)
-    (at 105.75 70.5 270)
+    (at 113.5 56.75 270)
     (descr "SOP, 8 Pin (http://www.macronix.com/Lists/Datasheet/Attachments/7534/MX25R3235F,%20Wide%20Range,%2032Mb,%20v1.6.pdf#page=79), generated with kicad-footprint-generator ipc_gullwing_generator.py")
     (tags "SOP SO")
     (path /60929F38)
