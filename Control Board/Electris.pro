@@ -1,4 +1,4 @@
-update=21/05/23 14:26:17
+update=21/08/07 16:47:51
 version=1
 last_client=kicad
 [general]
@@ -46,6 +46,9 @@ ViaDrill1=0.4
 dPairWidth1=0.2
 dPairGap1=0.25
 dPairViaGap1=0.25
+dPairWidth2=0.125
+dPairGap2=0.125
+dPairViaGap2=0.125
 SilkLineWidth=0.12
 SilkTextSizeV=1
 SilkTextSizeH=1
@@ -247,4 +250,15 @@ uViaDiameter=0.3
 uViaDrill=0.1
 dPairWidth=0.2
 dPairGap=0.25
+dPairViaGap=0.25
+[pcbnew/Netclasses/1]
+Name=Differential
+Clearance=0.125
+TrackWidth=0.125
+ViaDiameter=0.8
+ViaDrill=0.4
+uViaDiameter=0.3
+uViaDrill=0.1
+dPairWidth=0.125
+dPairGap=0.125
 dPairViaGap=0.25
