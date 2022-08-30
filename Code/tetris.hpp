@@ -6,109 +6,151 @@
 
 #define LEFT_SPAWN_COL 4
 
+#define ROTATE_THRESHOLD 0.4
+#define MOVE_THRESHOLD 0.4
+#define SLOW_FALL_THRESHOLD 0.4
+
 #include <map>
 #include <queue>
 #include <vector>
 
 namespace Electris {
+	typedef BlockValue Field[ROWS][COLS];
+	typedef unsigned char MinoState[4][4];
+	typedef WallKickPair WallKickPairList[8][5];
 
-typedef BlockValue Field[ROWS][COLS];
-typedef void (*EventCallback)();
-typedef unsigned char MinoState[4][4];
+	enum GameState { PRESTART, RUNNING, LOST };
 
-enum GameState { PRESTART, RUNNING, LOST };
+	enum GameEvent {
+		BLOCK_COLLISION,
+		BLOCK_LANDING,
+		LINE_CLEAR,
+		GAME_OVER,
+		GAME_START
+	};
 
-enum GameEvent {
-    BLOCK_COLLISION,
-    BLOCK_LANDING,
-    LINE_CLEAR,
-    GAME_OVER,
-    GAME_START
-};
+	enum BlockValue {
+		EMPTY = 0,
+		LANDED_A = 1,
+		LANDED_B = 2,
+		LANDED_C = 3,
+		LANDED_D = 4,
+		LANDED_E = 5,
+		LANDED_F = 6,
+		LANDED_G = 7,
+	};
 
-enum BlockValue {
-    EMPTY = 0,
-    LANDED_A = 1,
-    LANDED_B = 2,
-    LANDED_C = 3,
-    LANDED_D = 4,
-    LANDED_E = 5,
-    LANDED_F = 6,
-    LANDED_G = 7,
-};
+	struct Mino {
+		MinoState rotationStates[4];
+	};
 
-struct Mino {
-    MinoState rotationStates[4];
-};
+	struct WallKickPair {
+		int x, y;
+	};
 
-static const Mino L{{{{0, 0, 1, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-                     {{0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}},
-                     {{0, 0, 0, 0}, {1, 1, 1, 0}, {1, 0, 0, 0}, {0, 0, 0, 0}},
-                     {{1, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}}},
-    I{{{{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-       {{0, 0, 1, 0}, {0, 0, 1, 0}, {0, 0, 1, 0}, {0, 0, 1, 0}},
-       {{0, 0, 0, 0}, {0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
-       {{0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}}}},
-    S{{{{0, 1, 1, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-       {{0, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 1, 0}, {0, 0, 0, 0}},
-       {{0, 0, 0, 0}, {0, 1, 1, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
-       {{1, 0, 0, 0}, {1, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}}},
-    Z{{{{1, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-       {{0, 0, 1, 0}, {0, 1, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
-       {{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}},
-       {{0, 1, 0, 0}, {1, 1, 0, 0}, {1, 0, 0, 0}, {0, 0, 0, 0}}}},
-    O{{{{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-       {{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-       {{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-       {{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}}},
-    T{{{{0, 1, 0, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-       {{0, 1, 0, 0}, {0, 1, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
-       {{0, 0, 0, 0}, {1, 1, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
-       {{0, 1, 0, 0}, {1, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}}},
-    J{{{{1, 0, 0, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-       {{0, 1, 1, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
-       {{0, 0, 0, 0}, {1, 1, 1, 0}, {0, 0, 1, 0}, {0, 0, 0, 0}},
-       {{0, 1, 0, 0}, {0, 1, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}}}};
+	static Mino MINO_L{
+		{{{0, 0, 1, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+		 {{0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}},
+		 {{0, 0, 0, 0}, {1, 1, 1, 0}, {1, 0, 0, 0}, {0, 0, 0, 0}},
+		 {{1, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}}},
+		MINO_I{{{{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				{{0, 0, 1, 0}, {0, 0, 1, 0}, {0, 0, 1, 0}, {0, 0, 1, 0}},
+				{{0, 0, 0, 0}, {0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
+				{{0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}}}},
+		MINO_S{{{{0, 1, 1, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				{{0, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 1, 0}, {0, 0, 0, 0}},
+				{{0, 0, 0, 0}, {0, 1, 1, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
+				{{1, 0, 0, 0}, {1, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}}},
+		MINO_Z{{{{1, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				{{0, 0, 1, 0}, {0, 1, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
+				{{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}},
+				{{0, 1, 0, 0}, {1, 1, 0, 0}, {1, 0, 0, 0}, {0, 0, 0, 0}}}},
+		MINO_O{{{{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				{{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				{{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				{{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}}},
+		MINO_T{{{{0, 1, 0, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				{{0, 1, 0, 0}, {0, 1, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
+				{{0, 0, 0, 0}, {1, 1, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
+				{{0, 1, 0, 0}, {1, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}}},
+		MINO_J{{{{1, 0, 0, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				{{0, 1, 1, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
+				{{0, 0, 0, 0}, {1, 1, 1, 0}, {0, 0, 1, 0}, {0, 0, 0, 0}},
+				{{0, 1, 0, 0}, {0, 1, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}}}},
+		MINO_NONE{{{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				   {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				   {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
+				   {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}}};
 
-struct InputState {
-    bool mvLeft, mvRight, slam, mvDown, tnLeft, tnRight, hold;
-};
+	static WallKickPairList JLTSZ_WALLKICKS = {
+		{{0, 0}, {-1, 0}, {-1, 1}, {0, -2}, {-1, -2}},	// 0 >> 1
+		{{0, 0}, {1, 0}, {1, -1}, {0, 2}, {1, 2}},		// 1 >> 0
+		{{0, 0}, {1, 0}, {1, -1}, {0, 2}, {1, 2}},		// 1 >> 2
+		{{0, 0}, {-1, 0}, {-1, 1}, {0, -2}, {-1, -2}},	// 2 >> 1
+		{{0, 0}, {1, 0}, {1, 1}, {0, -2}, {1, -2}},		// 2 >> 3
+		{{0, 0}, {-1, 0}, {-1, -1}, {0, 2}, {-1, 2}},	// 3 >> 2
+		{{0, 0}, {-1, 0}, {-1, -1}, {0, 2}, {-1, 2}},	// 3 >> 0
+		{{0, 0}, {1, 0}, {1, 1}, {0, -2}, {1, -2}}};	// 0 >> 3
 
-class ElectrisGame {
-   private:
-    // callbacks
-    std::map<GameEvent, std::vector<EventCallback>> callbackMap;
+	static WallKickPairList I_WALLKICKS = {
+		{{0, 0}, {-2, 0}, {1, 0}, {-2, -1}, {1, 2}},   // 0 >> 1
+		{{0, 0}, {2, 0}, {-1, 0}, {2, 1}, {-1, -2}},   // 1 >> 0
+		{{0, 0}, {-1, 0}, {2, 0}, {-1, 2}, {2, -1}},   // 1 >> 2
+		{{0, 0}, {1, 0}, {-2, 0}, {1, -2}, {-2, 1}},   // 2 >> 1
+		{{0, 0}, {2, 0}, {-1, 0}, {2, 1}, {-1, -2}},   // 2 >> 3
+		{{0, 0}, {-2, 0}, {1, 0}, {-2, -1}, {1, 2}},   // 3 >> 2
+		{{0, 0}, {1, 0}, {-2, 0}, {1, -2}, {-2, 1}},   // 3 >> 0
+		{{0, 0}, {-1, 0}, {2, 0}, {-1, 2}, {2, -1}}};  // 0 >> 3
 
-    // game state
-    Field field[10][16];
-    bool holdUsed, slammed;
-    Mino held, falling;
-    unsigned int x, y;
-    unsigned int rotation;
-    GameState currentState;
+	struct InputState {
+		bool mvLeft, mvRight, slam, mvDown, tnLeft, tnRight, hold;
+	};
 
-    std::queue<Mino> upcoming;
+	class ElectrisGame {
+	   private:
+		// callbacks
+		std::map<GameEvent, std::vector<void (*)()>> callbackMap;
 
-    void triggerCallbacks(GameEvent trigger);
-    Mino queueNextMino();
-    void hold();
-    void slam();
-    void spawnNextMino();
+		// game state
+		Field field;
+		bool holdUsed, slammed;
+		Mino* held;
+		Mino* falling;
+		int x, y;
+		unsigned int rotation;
+		GameState currentState;
+		float fallTime, rotateLeftHoldTime, rotateRightHoldTime, downHoldTime, leftHoldTime, rightHoldTime;
 
-   public:
-    ElectrisGame();
-    ~ElectrisGame();
-    GameState getGameState();
-    Mino getHeldMino();
-    Mino getFallingMino();
-    Mino getNextMino();
+		std::queue<Mino*> upcoming;
 
-    int startGame();
-    GameState updateGame(float deltaTime, InputState inputs);
+		void triggerCallbacks(GameEvent trigger);
+		Mino* queueNextMino();
+		void hold();
+		void slam();
+		void descend();
+		void lock();
+		void rotate(bool direction);
+		void move(bool direction);
+		void spawnNextMino();
 
-    void registerCallback(GameEvent trigger, EventCallback cb);
-};
+		void minoLandedCallback();
+
+	   public:
+		ElectrisGame();
+		~ElectrisGame();
+		GameState getGameState();
+		Mino* getHeldMino();
+		Mino* getFallingMino();
+		Mino* getNextMino();
+
+		bool checkHypotheticalPosition(Mino mino, unsigned int rot, int x, int y);
+
+		int startGame();
+		GameState updateGame(float deltaTime, InputState inputs);
+
+		void registerCallback(GameEvent trigger, void (*cb)());
+	};
 
 }  // namespace Electris
 
-#endif  // include guard
+#endif	// include guard
