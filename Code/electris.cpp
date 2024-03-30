@@ -1,4 +1,4 @@
-#include "tetris.hpp"
+#include "electris.hpp"
 
 using namespace Electris;
 
@@ -16,7 +16,7 @@ void ElectrisGame::triggerCallbacks(GameEvent trigger) {
 	// this is fucking gross
 	// but the easiest place to put it sadly
 	if (trigger == GameEvent::BLOCK_LANDING) {
-		held = false;
+		holdUsed = false;
 	}
 }
 
@@ -54,10 +54,12 @@ void ElectrisGame::hold() {
 	// if we got here we're assuming hold is legal
 	holdUsed = true;
 
+	// cycle the falling/held minos
 	Mino* temp = falling;
 	falling = held;
 	held = falling;
 
+	// pop the next mino in
 	spawnNextMino();
 }
 
@@ -75,6 +77,7 @@ void ElectrisGame::slam() {
 }
 
 void ElectrisGame::descend() {
+	// check to see if it's valid to move down, if not lock in place
 	if (checkHypotheticalPosition(*falling, rotation, x, y - 1))
 		y--;
 	else
@@ -87,14 +90,16 @@ void ElectrisGame::lock() {
 
 	// if this is being called we're gonna assume already that it's valid
 
+	// same as our position check loop, just add to the field
 	for (unsigned int r = 0; r < 4; r++) {
 		for (unsigned int c = 0; c < 4; c++) {
 			if (falling->rotationStates[rotation][r][c]) {
-				field[y - r][x + c] =
-					BlockValue::LANDED_A;  // for now just mae everything type A
+				field[y - r][x + c] = falling->landedValue;
 			}
 		}
 	}
+
+	falling = &MINO_NONE;
 
 	triggerCallbacks(GameEvent::BLOCK_LANDING);
 
@@ -189,7 +194,7 @@ void ElectrisGame::spawnNextMino() {
 	triggerCallbacks(GameEvent::GAME_OVER);
 }
 
-void ElectrisGame::minoLandedCallback() { held = false; }
+void ElectrisGame::minoLandedCallback() { holdUsed = false; }
 
 ElectrisGame::ElectrisGame() {
 	currentState = GameState::PRESTART;
@@ -213,6 +218,8 @@ Mino* ElectrisGame::getHeldMino() { return held; }
 Mino* ElectrisGame::getFallingMino() { return falling; }
 
 Mino* ElectrisGame::getNextMino() { return upcoming.front(); }
+
+unsigned int ElectrisGame::getLevel() { return level; }
 
 bool ElectrisGame::checkHypotheticalPosition(Mino mino, unsigned int rot,
 											 int _x, int _y) {
@@ -249,6 +256,7 @@ GameState ElectrisGame::updateGame(float deltaTime, InputState inputs) {
 
 	// first thing's first, make sure there's a mino?
 	if (falling == &MINO_NONE) {
+		queueNextMino();
 		spawnNextMino();
 	}
 
@@ -266,6 +274,14 @@ GameState ElectrisGame::updateGame(float deltaTime, InputState inputs) {
 	}
 
 	// remaining actions are timed: rotation, soft drop, timed drop etc.
+
+	// these all operate in a similar way: when the button is pressed
+	// we want the action to trigger immediately. If it's held we want to
+	// repeat it after a set time, and if it's released and pressed again
+	// we again want an immediate trigger
+
+	// should probably generalize this code because don't repeat yourself but oh
+	// well
 	if (inputs.tnLeft) {
 		if (rotateLeftHoldTime == 0 || rotateLeftHoldTime > ROTATE_THRESHOLD) {
 			rotate(false);
@@ -292,8 +308,7 @@ GameState ElectrisGame::updateGame(float deltaTime, InputState inputs) {
 	}
 
 	if (inputs.mvLeft) {
-		if (leftHoldTime == 0 ||
-			leftHoldTime > MOVE_THRESHOLD) {
+		if (leftHoldTime == 0 || leftHoldTime > MOVE_THRESHOLD) {
 			move(false);
 			if (leftHoldTime > 0) {
 				leftHoldTime -= MOVE_THRESHOLD;
@@ -305,8 +320,7 @@ GameState ElectrisGame::updateGame(float deltaTime, InputState inputs) {
 	}
 
 	if (inputs.mvRight) {
-		if (rightHoldTime == 0 ||
-			rightHoldTime > MOVE_THRESHOLD) {
+		if (rightHoldTime == 0 || rightHoldTime > MOVE_THRESHOLD) {
 			move(true);
 			if (rightHoldTime > 0) {
 				rightHoldTime -= MOVE_THRESHOLD;
@@ -317,8 +331,26 @@ GameState ElectrisGame::updateGame(float deltaTime, InputState inputs) {
 		rightHoldTime = 0;
 	}
 
-	if (downHoldTime) {
-		baaaaa
+	// this one is a little different, because it also needs to
+	// happen without a button press I guess
+	if (inputs.mvDown) {
+		if (downHoldTime == 0 || downHoldTime > MOVE_THRESHOLD) {
+			descend();
+			if (downHoldTime > 0) {
+				downHoldTime -= MOVE_THRESHOLD;
+			}
+		}
+		downHoldTime += deltaTime;
+	} else {
+		downHoldTime = 0;
+
+		// if we aren't actively lowering the mino, do it passively
+		fallTime += deltaTime;
+
+		if (fallTime > BASE_FALL_TIME * FALL_LEVEL_MULTIPLIER * level) {
+			descend();
+			fallTime -= BASE_FALL_TIME * FALL_LEVEL_MULTIPLIER * level;
+		}
 	}
 
 	return currentState;

@@ -1,6 +1,12 @@
 #ifndef ELECTRIS_GAME  // include guard
 #define ELECTRIS_GAME
 
+#include <map>
+#include <queue>
+#include <vector>
+
+namespace Electris {
+
 #define ROWS 22
 #define COLS 10
 
@@ -10,14 +16,10 @@
 #define MOVE_THRESHOLD 0.4
 #define SLOW_FALL_THRESHOLD 0.4
 
-#include <map>
-#include <queue>
-#include <vector>
+#define BASE_FALL_TIME 0.75
+#define FALL_LEVEL_MULTIPLIER 0.9
 
-namespace Electris {
-	typedef BlockValue Field[ROWS][COLS];
 	typedef unsigned char MinoState[4][4];
-	typedef WallKickPair WallKickPairList[8][5];
 
 	enum GameState { PRESTART, RUNNING, LOST };
 
@@ -40,43 +42,55 @@ namespace Electris {
 		LANDED_G = 7,
 	};
 
+	typedef BlockValue Field[ROWS][COLS];
+	
 	struct Mino {
 		MinoState rotationStates[4];
+		BlockValue landedValue;
 	};
 
 	struct WallKickPair {
 		int x, y;
 	};
 
+	typedef WallKickPair WallKickPairList[8][5];
+
 	static Mino MINO_L{
 		{{{0, 0, 1, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
 		 {{0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}},
 		 {{0, 0, 0, 0}, {1, 1, 1, 0}, {1, 0, 0, 0}, {0, 0, 0, 0}},
-		 {{1, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}}},
+		 {{1, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}},
+		BlockValue::LANDED_G},
 		MINO_I{{{{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}},
 				{{0, 0, 1, 0}, {0, 0, 1, 0}, {0, 0, 1, 0}, {0, 0, 1, 0}},
 				{{0, 0, 0, 0}, {0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
-				{{0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}}}},
+				{{0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}}},
+			   BlockValue::LANDED_A},
 		MINO_S{{{{0, 1, 1, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
 				{{0, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 1, 0}, {0, 0, 0, 0}},
 				{{0, 0, 0, 0}, {0, 1, 1, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
-				{{1, 0, 0, 0}, {1, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}}},
+				{{1, 0, 0, 0}, {1, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}},
+			   BlockValue::LANDED_B},
 		MINO_Z{{{{1, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
 				{{0, 0, 1, 0}, {0, 1, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
 				{{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}},
-				{{0, 1, 0, 0}, {1, 1, 0, 0}, {1, 0, 0, 0}, {0, 0, 0, 0}}}},
+				{{0, 1, 0, 0}, {1, 1, 0, 0}, {1, 0, 0, 0}, {0, 0, 0, 0}}},
+			   BlockValue::LANDED_C},
 		MINO_O{{{{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
 				{{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
 				{{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-				{{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}}},
+				{{0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}},
+			   BlockValue::LANDED_D},
 		MINO_T{{{{0, 1, 0, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
 				{{0, 1, 0, 0}, {0, 1, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
 				{{0, 0, 0, 0}, {1, 1, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
-				{{0, 1, 0, 0}, {1, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}}},
+				{{0, 1, 0, 0}, {1, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}}},
+			   BlockValue::LANDED_E},
 		MINO_J{{{{1, 0, 0, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
 				{{0, 1, 1, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}},
 				{{0, 0, 0, 0}, {1, 1, 1, 0}, {0, 0, 1, 0}, {0, 0, 0, 0}},
-				{{0, 1, 0, 0}, {0, 1, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}}}},
+				{{0, 1, 0, 0}, {0, 1, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}}},
+			   BlockValue::LANDED_F},
 		MINO_NONE{{{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
 				   {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
 				   {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
@@ -119,7 +133,10 @@ namespace Electris {
 		int x, y;
 		unsigned int rotation;
 		GameState currentState;
-		float fallTime, rotateLeftHoldTime, rotateRightHoldTime, downHoldTime, leftHoldTime, rightHoldTime;
+		float fallTime, rotateLeftHoldTime, rotateRightHoldTime, downHoldTime,
+			leftHoldTime, rightHoldTime;
+
+		unsigned int level;
 
 		std::queue<Mino*> upcoming;
 
@@ -142,8 +159,10 @@ namespace Electris {
 		Mino* getHeldMino();
 		Mino* getFallingMino();
 		Mino* getNextMino();
+		unsigned int getLevel();
 
-		bool checkHypotheticalPosition(Mino mino, unsigned int rot, int x, int y);
+		bool checkHypotheticalPosition(Mino mino, unsigned int rot, int x,
+									   int y);
 
 		int startGame();
 		GameState updateGame(float deltaTime, InputState inputs);
